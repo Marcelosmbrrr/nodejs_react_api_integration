@@ -1,0 +1,10 @@
+1 - Install: npm install prisma --save-dev
+2 - Generate Prisma files: npx prisma init --datasource-provider mysql
+3 - Migrate Prisma tables: npx prisma migrate dev --name init
+4 - Execute Seeder: npx prisma db seed (add "prisma": {"seed": "ts-node prisma\seed.ts"} to package.json )
+
+How reset scheme?
+
+npx prisma generate
+npx prisma migrate dev
+Close VsCode, Apps, and re-open (why? idk - source: https://stackoverflow.com/questions/69274503/property-does-not-exist-when-i-want-to-use-model-added-in-prisma-schema)
