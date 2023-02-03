@@ -3,7 +3,8 @@ import { sign } from 'jsonwebtoken';
 
 /*
 - This class is used to create an access token 
-- Its used to access protected routes and to login without credential
+- Its used to access protected routes and preserve login state
+- It have a tiny lifetime - 1 hour, for example
 */
 
 export class CreateAccessTokenProvider {
@@ -12,7 +13,7 @@ export class CreateAccessTokenProvider {
 
         const access_token_jwt = sign({}, process.env.SECRET_JWT, {
             subject: userId.toString(),
-            expiresIn: "20s"
+            expiresIn: "60s"
         });
 
         return access_token_jwt;

@@ -95,9 +95,10 @@ export function UsersTable() {
             headers: headers
         })
             .then((response) => {
-                setData(response.data.users);
+                setData([]);
             })
             .catch((error) => {
+                setData([]);
                 enqueueSnackbar(error.response.data.message, { variant: "error" });
             })
             .finally(() => {

@@ -22,11 +22,13 @@ const router = Router();
 // Authentication
 router.post('/login', AuthController.login);
 router.post('/logout', AuthController.logout);
+router.get('/auth-data', AuthController.userAuthenticatedData);
+router.post('/refresh-access-token', AuthController.refreshAccessToken);
 // User actions
-router.get('/users', UserController.index);
-router.get('/users/:identifier', UserController.find);
-router.post('/users', createUserRequest, UserController.store);
-router.patch('/users/:identifier', updateUserRequest, UserController.update);
-router.delete('/users/:identifier', UserController.delete);
+router.get('/user', UserController.index);
+router.get('/user/:identifier', UserController.find);
+router.post('/user', createUserRequest, UserController.store);
+router.patch('/user/:identifier', updateUserRequest, UserController.update);
+router.delete('/user/:identifier', UserController.delete);
 
 export { router }

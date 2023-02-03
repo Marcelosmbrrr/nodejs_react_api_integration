@@ -5,11 +5,8 @@ import { sign } from 'jsonwebtoken';
 
 /*
 - This class is used to create an refresh token
-- Its used to recreat a access token after it expires
-- The refresh token is created when:
-
-1 - user does login, being created with an access token;
-2 - access token expires and need to be recreated - refresh token "refresh" the access token data;
+- Its used to recreat the access token after it expires
+- Refresh token have more lifetime that access token - 7 days, for example
 */
 
 export class CreateRefreshTokenProvider {
@@ -18,8 +15,14 @@ export class CreateRefreshTokenProvider {
 
         const expiresIn = dayjs().add(7, "days").unix();
 
-        const new_refresh_token = await prisma.refreshToken.create({
-            data: {
+        const new_refresh_token = await prisma.refreshToken.upsert({
+            where: {
+                userId: userId
+            },
+            update: {
+                expiresIn: expiresIn
+            },
+            create: {
                 userId: userId,
                 expiresIn
             }

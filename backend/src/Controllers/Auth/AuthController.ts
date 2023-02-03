@@ -4,8 +4,9 @@ import { compare } from 'bcryptjs';
 // Provider
 import { CreateAccessTokenProvider } from "../../providers/CreateAccessTokenProvider";
 import { CreateRefreshTokenProvider } from "../../providers/CreateRefreshTokenProvider";
+import { VerifyTokenProvider } from "../../providers/VerifyTokenProvider";
 // JWT verify
-import { verify } from 'jsonwebtoken';
+import { JwtPayload, verify } from 'jsonwebtoken';
 
 class AuthController {
 
@@ -49,6 +50,64 @@ class AuthController {
 
             res.status(500).send({ message: error.message });
 
+        }
+
+    }
+
+    async userAuthenticatedData(req: Request, res: Response) {
+        try {
+            res.status(200).send({ message: "user auth data" });
+        } catch (error) {
+            res.status(500).send({ message: error.message });
+        }
+    }
+
+    async refreshAccessToken(req: Request, res: Response) {
+
+        try {
+
+            const refresh_token = req.headers['authorization'];
+
+            if (!refresh_token) {
+                throw new Error('Unauthorized.');
+            }
+
+            // Verify token
+            const tokenVerification = new VerifyTokenProvider();
+            const verification: JwtPayload | Boolean = await tokenVerification.execute(refresh_token);
+
+            if (!verification) {
+                throw new Error('Unauthorized.');
+            }
+
+            const user = await prisma.user.findUnique({
+                where: {
+                    id: Number(verification.sub), // token subject (is user id)
+                },
+            })
+
+            if (!user) {
+                throw new Error('Unauthorized.');
+            }
+
+            // Create Access Token
+            const createAccessTokenProvider = new CreateAccessTokenProvider();
+            const access_token_jwt = await createAccessTokenProvider.execute(Number(user.id));
+
+            // Create Refresh Token
+            const createRefreshToken = new CreateRefreshTokenProvider();
+            const refresh_token_jwt = await createRefreshToken.execute(Number(user.id));
+
+            res.status(200).send({
+                access_token_jwt, refresh_token_jwt, user: {
+                    name: user.name,
+                    email: user.email,
+                    role_id: user.roleId
+                }
+            });
+
+        } catch (error) {
+            res.status(500).send({ message: error.message });
         }
 
     }

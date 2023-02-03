@@ -18,9 +18,11 @@ export function MyProfileModal() {
         setOpen(false);
     }
 
-    <Tooltip title="Add User">
-        <IconButton variant="contained" onClick={handleOpen}>
-            <AccountCircleIcon />
-        </IconButton>
-    </Tooltip>
+    return (
+        <Tooltip title="Profile">
+            <IconButton onClick={handleOpen}>
+                <AccountCircleIcon />
+            </IconButton>
+        </Tooltip>
+    );
 }

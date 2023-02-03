@@ -11,33 +11,11 @@ export function AuthProvider({ children }: { children: ReactJSXElement }) {
 
     const [user, setUser] = React.useState<null | IUserContext>(null);
 
-    // !! = short way to cast a variable to be a boolean
+    // !! = short way to cast a variable to a boolean
     const isAuthenticated: Boolean = !!user;
 
-    // This wil be call when user refreh the page
-    React.useEffect(() => {
-
-        const token = localStorage.getItem('authtoken');
-
-        const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        }
-
-        if (!!token) {
-            axios.get(`${import.meta.env.VITE_BACKEND_URL}/auth-data`, { headers })
-                .then((response) => {
-                    setUser(response.data.user);
-                })
-
-        }
-
-    }, []);
-
     async function signIn(formData: FormData): Promise<void> {
-
         try {
-
 
             const response = await axios({
                 url: `${import.meta.env.VITE_BACKEND_URL}/login`,
@@ -49,20 +27,20 @@ export function AuthProvider({ children }: { children: ReactJSXElement }) {
                 data: JSON.stringify(formData)
             });
 
-            console.log(response);
+            const access_token = response.data.access_token_jwt;
+            const refresh_token = response.data.refresh_token_jwt;
 
-            /*            
-            localStorage.setItem("authtoken", response.data.token)
+            localStorage.setItem("authtoken", access_token);
+            localStorage.setItem("refreshtoken", refresh_token);
 
-            axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+            axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token_jwt}`;
 
             setUser(response.data.user);
 
-            redirect("internal/dashboard");
-            */
+            window.location.assign("/dashboard");
 
         } catch (error) {
-
+       
             throw error;
 
         }
@@ -75,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactJSXElement }) {
 
         try {
 
-            const response = await axios({
+            await axios({
                 url: `${import.meta.env.VITE_BACKEND_URL}/logout`,
                 method: 'POST',
                 headers: {
@@ -88,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactJSXElement }) {
 
             setUser(null);
 
-            redirect("/login");
+            window.location.assign("/login");
 
         } catch (error) {
 
@@ -97,9 +75,61 @@ export function AuthProvider({ children }: { children: ReactJSXElement }) {
         }
 
     }
+    
+    async function verifyAuthentication() {
+
+        const access_token = localStorage.getItem("authtoken");
+        const refresh_token = localStorage.getItem("refreshtoken");
+
+        if (Boolean(access_token)) {
+
+            // Get authenticated user data
+            // Send access token to authorize
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${access_token}`
+            }
+
+            axios.get(`${import.meta.env.VITE_BACKEND_URL}/auth-data`, { headers })
+                .then((response) => {
+                    console.log(response)
+                    //setUser(response.data.user);
+                })
+                .catch((error) => {
+                    console.log(error)
+                    localStorage.removeItem("authtoken");
+                    //window.location.assign("/login");
+                });
+
+        } else if (Boolean(refresh_token)) {
+
+            // Get authenticated user data and a new access and refresh token
+            // Send refresh token to authorize
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${refresh_token}`
+            }
+
+            axios.post(`${import.meta.env.VITE_BACKEND_URL}/refresh-access-token`, { headers })
+                .then((response) => {
+                    console.log(response)
+                    //setUser(response.data.user);
+                    //localStorage.setItem("authtoken", response.data.access_token_jwt);
+                    //localStorage.setItem("refreshtoken", response.data.refresh_token_jwt);
+                })
+                .catch((error) => {
+                    console.log(error)
+                    localStorage.removeItem("refreshtoken");
+                    //window.location.assign("/login");
+                });
+        }
+
+    }
 
     return (
-        <AuthContext.Provider value={{ user, signIn, signOut, isAuthenticated }}>
+        <AuthContext.Provider value={{ user, signIn, signOut, isAuthenticated, verifyAuthentication }}>
             {children}
         </AuthContext.Provider>
     )
