@@ -1,6 +1,5 @@
 import * as React from 'react';
 import { api as axios } from '../services/api';
-import { redirect } from "react-router-dom";
 // Types
 import { ReactJSXElement } from '@emotion/react/types/jsx-namespace';
 import { IUserContext } from '../types';
@@ -15,32 +14,31 @@ export function AuthProvider({ children }: { children: ReactJSXElement }) {
     const isAuthenticated: Boolean = !!user;
 
     async function signIn(formData: FormData): Promise<void> {
+
         try {
 
-            const response = await axios({
-                url: `${import.meta.env.VITE_BACKEND_URL}/login`,
-                method: 'POST',
-                responseType: 'json',
+            const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/login`, JSON.stringify(formData), {
                 headers: {
                     'Content-Type': 'application/json'
-                },
-                data: JSON.stringify(formData)
+                }
             });
 
             const access_token = response.data.access_token_jwt;
             const refresh_token = response.data.refresh_token_jwt;
 
+            if (!access_token || !refresh_token) {
+                throw new Error("Token invalid");
+            }
+
             localStorage.setItem("authtoken", access_token);
             localStorage.setItem("refreshtoken", refresh_token);
-
-            axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.access_token_jwt}`;
 
             setUser(response.data.user);
 
             window.location.assign("/dashboard");
 
         } catch (error) {
-       
+
             throw error;
 
         }
@@ -49,7 +47,13 @@ export function AuthProvider({ children }: { children: ReactJSXElement }) {
     async function signOut(): Promise<void> {
 
         // Get token
-        const token = localStorage.getItem('authtoken');
+        const access_token = localStorage.getItem('authtoken');
+
+        if (!access_token) {
+            localStorage.removeItem('authtoken');
+            localStorage.removeItem('refreshtoken');
+            window.location.assign("/login");
+        }
 
         try {
 
@@ -58,24 +62,25 @@ export function AuthProvider({ children }: { children: ReactJSXElement }) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
+                    'Authorization': `Bearer ${access_token}`
                 }
             });
 
             localStorage.removeItem('authtoken');
-
+            localStorage.removeItem('refreshtoken');
             setUser(null);
 
             window.location.assign("/login");
 
         } catch (error) {
-
             console.log(error);
-
+            localStorage.removeItem('authtoken');
+            localStorage.removeItem('refreshtoken');
+            window.location.assign("/login");
         }
 
     }
-    
+
     async function verifyAuthentication() {
 
         const access_token = localStorage.getItem("authtoken");
@@ -91,16 +96,16 @@ export function AuthProvider({ children }: { children: ReactJSXElement }) {
                 'Authorization': `Bearer ${access_token}`
             }
 
-            axios.get(`${import.meta.env.VITE_BACKEND_URL}/auth-data`, { headers })
-                .then((response) => {
-                    console.log(response)
-                    //setUser(response.data.user);
-                })
-                .catch((error) => {
-                    console.log(error)
-                    localStorage.removeItem("authtoken");
-                    //window.location.assign("/login");
-                });
+            try {
+
+                const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/auth-data`, { headers });
+                setUser(response.data.user);
+
+            } catch (error) {
+                console.log(error)
+                //localStorage.clear();
+                //window.location.assign("/login");
+            }
 
         } else if (Boolean(refresh_token)) {
 
@@ -112,18 +117,31 @@ export function AuthProvider({ children }: { children: ReactJSXElement }) {
                 'Authorization': `Bearer ${refresh_token}`
             }
 
-            axios.post(`${import.meta.env.VITE_BACKEND_URL}/refresh-access-token`, { headers })
-                .then((response) => {
-                    console.log(response)
-                    //setUser(response.data.user);
-                    //localStorage.setItem("authtoken", response.data.access_token_jwt);
-                    //localStorage.setItem("refreshtoken", response.data.refresh_token_jwt);
-                })
-                .catch((error) => {
-                    console.log(error)
-                    localStorage.removeItem("refreshtoken");
-                    //window.location.assign("/login");
-                });
+            try {
+
+                const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/refresh-access-token`, { headers });
+
+                const access_token = response.data.access_token_jwt;
+                const refresh_token = response.data.refresh_token_jwt;
+
+                if (!access_token || !refresh_token) {
+                    throw new Error("Token invalid");
+                }
+
+                localStorage.setItem("authtoken", response.data.access_token_jwt);
+                localStorage.setItem("refreshtoken", response.data.refresh_token_jwt);
+                setUser(response.data.user);
+
+            } catch (error) {
+                console.log(error)
+                //localStorage.clear();
+                //window.location.assign("/login");
+            }
+
+        } else {
+            localStorage.removeItem('authtoken');
+            localStorage.removeItem('refreshtoken');
+            window.location.assign("/login");
         }
 
     }

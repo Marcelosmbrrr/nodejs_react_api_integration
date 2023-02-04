@@ -59,13 +59,9 @@ export const DeleteUserModal = React.memo((props) => {
             }, 2000);
 
         } catch (error) {
-
             setAlert({ display: true, type: "error", message: error.response.data.message });
-
         } finally {
-
             setLoading(false);
-
         }
 
     }
@@ -73,7 +69,7 @@ export const DeleteUserModal = React.memo((props) => {
     return (
         <>
             <Tooltip title="Desactivate User">
-                <IconButton variant="contained" onClick={handleOpen}>
+                <IconButton onClick={handleOpen}>
                     <DeleteIcon />
                 </IconButton>
             </Tooltip>

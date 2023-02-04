@@ -73,7 +73,7 @@ const columns = [
 export function UsersTable() {
 
     // Contexts
-    const { refreshTable, refresh } = useRefreshTable();
+    const { refresh } = useRefreshTable();
     const { enqueueSnackbar } = useSnackbar();
     // Local states
     const [loading, setLoading] = React.useState(true);
@@ -96,6 +96,7 @@ export function UsersTable() {
         })
             .then((response) => {
                 setData([]);
+                enqueueSnackbar("Usuários encontrados.", { variant: "success" });
             })
             .catch((error) => {
                 setData([]);

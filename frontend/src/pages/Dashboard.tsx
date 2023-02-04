@@ -27,8 +27,14 @@ export function Dashboard() {
     const [loading, setLoading] = React.useState(true);
 
     React.useEffect(() => {
-        verifyAuthentication();
-        setLoading(false);
+
+        const verify = async () => {
+            await verifyAuthentication();
+            setLoading(false);
+        }
+
+        verify();
+
     }, []);
 
     async function handleLogout() {

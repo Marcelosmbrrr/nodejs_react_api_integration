@@ -6,6 +6,8 @@ import { useSnackbar } from 'notistack';
 import { useAuth } from '../context/Auth';
 // Types
 import { IFormValidation } from '../types';
+import { IFormData } from '../types';
+import { IFormError } from '../types';
 
 const formValidation: IFormValidation = {
     email: {
@@ -23,8 +25,8 @@ export function Login() {
     const { enqueueSnackbar } = useSnackbar();
 
     const { signIn } = useAuth();
-    const [formData, setFormData] = React.useState({ email: "", password: "" });
-    const [formError, setFormError] = React.useState({ email: { error: false, message: "" }, password: { error: false, message: "" } });
+    const [formData, setFormData] = React.useState<IFormData>({ email: "", password: "" });
+    const [formError, setFormError] = React.useState<IFormError>({ email: { error: false, message: "" }, password: { error: false, message: "" } });
     const [loading, setLoading] = React.useState(false);
 
     function handleSubmit(e) {
@@ -55,6 +57,7 @@ export function Login() {
             await signIn(formData);
         } catch (error) {
             enqueueSnackbar(error.response.data.message, { variant: "error" });
+        } finally {
             setLoading(false);
         }
     }

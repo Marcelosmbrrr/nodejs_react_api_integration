@@ -9,7 +9,7 @@ class UserController {
 
         try {
 
-            const access_token = req.headers['authorization'];
+            const access_token = req.headers['authorization'] ? req.headers['authorization'].split(' ')[1] : undefined;
 
             if (!access_token) {
                 throw new Error('Unauthorized.');
@@ -22,7 +22,7 @@ class UserController {
             if (!verification) {
                 throw new Error('Unauthorized.');
             }
-
+            
             const users = prisma.user.findMany();
 
             if (!users) {

@@ -13,7 +13,7 @@ export class CreateAccessTokenProvider {
 
         const access_token_jwt = sign({}, process.env.SECRET_JWT, {
             subject: userId.toString(),
-            expiresIn: "60s"
+            expiresIn: "1000s"
         });
 
         return access_token_jwt;

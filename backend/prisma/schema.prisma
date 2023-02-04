@@ -11,8 +11,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// User [1:1] - [1:N] Role = one to many
-// User [1:1] - [1:1] Token = one to one
+// User [1:N] Role = one to many
+// User [1:N] Token = one to many
 
 model User {
   id           Int           @id @default(autoincrement())
@@ -24,7 +24,7 @@ model User {
   deleted      Boolean       @default(false)
   role         Role          @relation(fields: [roleId], references: [id]) // FK definition
   roleId       Int // FK field
-  RefreshToken RefreshToken?
+  RefreshToken RefreshToken[] // Has many tokens
 
   @@map("users")
 }

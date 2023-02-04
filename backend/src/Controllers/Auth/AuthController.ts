@@ -21,13 +21,13 @@ class AuthController {
             });
 
             if (!user) {
-                throw new Error('Email or password incorrect.');
+                throw new Error('Email or password incorrect');
             }
 
             const password_match = await compare(req.body.password, user.password);
 
             if (!password_match) {
-                throw new Error('Email or password incorrect.');
+                throw new Error('Email or password incorrect');
             }
 
             // Create Access Token
@@ -38,8 +38,61 @@ class AuthController {
             const createRefreshToken = new CreateRefreshTokenProvider();
             const refresh_token_jwt = await createRefreshToken.execute(user.id);
 
+            if (!access_token_jwt || !refresh_token_jwt) {
+                throw new Error('Token creation error');
+            }
+
             res.status(200).send({
                 access_token_jwt, refresh_token_jwt, user: {
+                    name: user.name,
+                    email: user.email,
+                    role_id: user.roleId,
+                    created_at: user.created_at
+                }
+            });
+
+        } catch (error) {
+            if (error.message === 'Email or password incorrect') {
+                res.status(401).send({ message: error.message });
+            } else {
+                res.status(500).send({ message: error.message });
+            }
+        }
+
+    }
+
+    async userAuthenticatedData(req: Request, res: Response) {
+
+        try {
+
+            const access_token = req.headers['authorization'] ? req.headers['authorization'].split(' ')[1] : undefined;
+
+            if (!access_token) {
+                throw new Error('Unauthorized');
+            }
+
+            // Verify token
+            const tokenVerification = new VerifyTokenProvider();
+            const verification: JwtPayload | Boolean = await tokenVerification.execute(access_token);
+
+            if (!verification) {
+                throw new Error('Token is invalid');
+            }
+
+            const userId = verification.sub;
+
+            const user = await prisma.user.findUnique({
+                where: {
+                    id: Number(userId),
+                },
+            });
+
+            if (!user) {
+                throw new Error('User not found');
+            }
+
+            res.status(200).send({
+                user: {
                     name: user.name,
                     email: user.email,
                     role_id: user.roleId
@@ -47,29 +100,23 @@ class AuthController {
             });
 
         } catch (error) {
-
-            res.status(500).send({ message: error.message });
-
+            if (error.message === 'Unauthorized' || error.message === 'Token is invalid' || error.message === 'User not found') {
+                res.status(401).send({ message: error.message });
+            } else {
+                res.status(500).send({ message: error.message });
+            }
         }
 
-    }
-
-    async userAuthenticatedData(req: Request, res: Response) {
-        try {
-            res.status(200).send({ message: "user auth data" });
-        } catch (error) {
-            res.status(500).send({ message: error.message });
-        }
     }
 
     async refreshAccessToken(req: Request, res: Response) {
 
         try {
 
-            const refresh_token = req.headers['authorization'];
+            const refresh_token = req.headers['authorization'] ? req.headers['authorization'].split(' ')[1] : undefined;
 
             if (!refresh_token) {
-                throw new Error('Unauthorized.');
+                throw new Error('Unauthorized');
             }
 
             // Verify token
@@ -77,17 +124,27 @@ class AuthController {
             const verification: JwtPayload | Boolean = await tokenVerification.execute(refresh_token);
 
             if (!verification) {
-                throw new Error('Unauthorized.');
+                throw new Error('Token is invalid');
+            }
+
+            const refresh_token_record = await prisma.refreshToken.findUnique({
+                where: {
+                    id: verification.sub, // token subject (is user id)
+                },
+            })
+
+            if (!refresh_token_record) {
+                throw new Error('Token is invalid');
             }
 
             const user = await prisma.user.findUnique({
                 where: {
-                    id: Number(verification.sub), // token subject (is user id)
+                    id: refresh_token_record.userId,
                 },
-            })
+            });
 
             if (!user) {
-                throw new Error('Unauthorized.');
+                throw new Error('User not found');
             }
 
             // Create Access Token
@@ -98,6 +155,10 @@ class AuthController {
             const createRefreshToken = new CreateRefreshTokenProvider();
             const refresh_token_jwt = await createRefreshToken.execute(Number(user.id));
 
+            if (!access_token_jwt || !refresh_token_jwt) {
+                throw new Error('Token creation error');
+            }
+
             res.status(200).send({
                 access_token_jwt, refresh_token_jwt, user: {
                     name: user.name,
@@ -107,7 +168,12 @@ class AuthController {
             });
 
         } catch (error) {
-            res.status(500).send({ message: error.message });
+            if (error.message === 'Unauthorized' || error.message === 'Token is invalid' || error.message === 'User not found') {
+                res.status(401).send({ message: error.message });
+            } else {
+                res.status(500).send({ message: error.message });
+            }
+
         }
 
     }
@@ -116,18 +182,25 @@ class AuthController {
 
         try {
 
-            const bearerToken = req.cookies.access_token;
+            const access_token = req.headers['authorization'] ? req.headers['authorization'].split(' ')[1] : undefined;
 
-            if (!bearerToken) {
-                throw new Error('Unauthorized.');
+            if (!access_token) {
+                throw new Error('Unauthorized');
             }
 
-            const access_token_payload = verify(bearerToken, process.env.SECRET_JWT);
+            // Verify token
+            const tokenVerification = new VerifyTokenProvider();
+            const verification: JwtPayload | Boolean = await tokenVerification.execute(access_token);
 
-            // Find refresh token in DB and turn into invalid token
+            if (!verification) {
+                throw new Error('Token is invalid');
+            }
+
+            const userId = verification.sub;
+
             await prisma.refreshToken.update({
                 where: {
-                    id: access_token_payload.userId,
+                    userId: Number(userId)
                 },
                 data: {
                     is_valid: false
@@ -138,7 +211,11 @@ class AuthController {
 
         } catch (error) {
 
-            res.status(500).send({ message: error.message });
+            if (error.message === 'Unauthorized' || error.message === 'Token is invalid') {
+                res.status(401).send({ message: error.message });
+            } else {
+                res.status(500).send({ message: error.message });
+            }
 
         }
 

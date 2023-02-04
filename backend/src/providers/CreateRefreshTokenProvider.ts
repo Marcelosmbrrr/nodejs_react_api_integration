@@ -13,23 +13,35 @@ export class CreateRefreshTokenProvider {
 
     async execute(userId: number) {
 
+        const refresh_token_record_exists = await prisma.refreshToken.count({
+            where: {
+                userId: userId,
+                is_valid: true
+            }
+        });
+
+        if (refresh_token_record_exists > 0) {
+            await prisma.refreshToken.update({
+                where: {
+                    userId: userId
+                },
+                data: {
+                    is_valid: false
+                }
+            });
+        }
+
         const expiresIn = dayjs().add(7, "days").unix();
 
-        const new_refresh_token = await prisma.refreshToken.upsert({
-            where: {
-                userId: userId
-            },
-            update: {
-                expiresIn: expiresIn
-            },
-            create: {
+        const new_refresh_token_record = await prisma.refreshToken.create({
+            data: {
                 userId: userId,
                 expiresIn
             }
         });
 
         const refresh_token_jwt = sign({}, process.env.SECRET_JWT, {
-            subject: new_refresh_token.id,
+            subject: new_refresh_token_record.id,
             expiresIn: "7d"
         });
 

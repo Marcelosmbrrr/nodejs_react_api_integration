@@ -16,14 +16,23 @@ async function main() {
         ]
     });
 
-    const admin = await prisma.user.create({
-        data: {
-            email: 'admin@gmail.com',
-            name: 'Fulano da Silva',
-            username: '@fulano',
-            password: await hash('12345', 8),
-            roleId: 1
-        },
+    const admin = await prisma.user.createMany({
+        data: [
+            {
+                email: 'admin@gmail.com',
+                name: 'Fulano da Silva',
+                username: '@fulano',
+                password: await hash('12345', 8),
+                roleId: 1
+            },
+            {
+                email: 'user_a@gmail.com',
+                name: 'User A',
+                username: '@user_a',
+                password: await hash('12345', 8),
+                roleId: 2
+            }
+        ]
     });
 
 }

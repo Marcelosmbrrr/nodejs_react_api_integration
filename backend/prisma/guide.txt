@@ -5,6 +5,6 @@
 
 How reset scheme?
 
-npx prisma generate
-npx prisma migrate dev
+npx prisma generate - Reads schema to generate the correct data source client code
+npx prisma migrate dev - Reads the data sources and data model definition to create a new migration
 Close VsCode, Apps, and re-open (why? idk - source: https://stackoverflow.com/questions/69274503/property-does-not-exist-when-i-want-to-use-model-added-in-prisma-schema)
