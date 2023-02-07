@@ -83,13 +83,11 @@ export function AuthProvider({ children }: { children: ReactJSXElement }) {
 
     async function verifyAuthentication() {
 
-        const access_token = localStorage.getItem("authtoken");
-        const refresh_token = localStorage.getItem("refreshtoken");
-
-        if (Boolean(access_token)) {
+        if (Boolean(localStorage.getItem("authtoken"))) {
 
             // Get authenticated user data
             // Send access token to authorize
+            const access_token = localStorage.getItem("authtoken");
 
             const headers = {
                 'Content-Type': 'application/json',
@@ -103,45 +101,56 @@ export function AuthProvider({ children }: { children: ReactJSXElement }) {
 
             } catch (error) {
                 console.log(error)
+                // Logout or call refreshAccessToken()
                 //localStorage.clear();
                 //window.location.assign("/login");
             }
 
-        } else if (Boolean(refresh_token)) {
+        } else if (Boolean(localStorage.getItem("refreshtoken"))) {
 
-            // Get authenticated user data and a new access and refresh token
-            // Send refresh token to authorize
-
-            const headers = {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${refresh_token}`
-            }
-
-            try {
-
-                const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/refresh-access-token`, { headers });
-
-                const access_token = response.data.access_token_jwt;
-                const refresh_token = response.data.refresh_token_jwt;
-
-                if (!access_token || !refresh_token) {
-                    throw new Error("Token invalid");
-                }
-
-                localStorage.setItem("authtoken", response.data.access_token_jwt);
-                localStorage.setItem("refreshtoken", response.data.refresh_token_jwt);
-                setUser(response.data.user);
-
-            } catch (error) {
-                console.log(error)
-                //localStorage.clear();
-                //window.location.assign("/login");
-            }
+            refreshAccessToken();
 
         } else {
+
+            // User session expired - clear browser and redirect to /login
             localStorage.removeItem('authtoken');
             localStorage.removeItem('refreshtoken');
             window.location.assign("/login");
+        }
+
+    }
+
+    async function refreshAccessToken() {
+
+        // Get authenticated user data and a new access and refresh token
+        // Send refresh token to authorize
+        const refresh_token = localStorage.getItem("refreshtoken");
+
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${refresh_token}`
+        }
+
+        try {
+
+            const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/refresh-access-token`, { headers });
+
+            const access_token = response.data.access_token_jwt;
+            const refresh_token = response.data.refresh_token_jwt;
+
+            if (!access_token || !refresh_token) {
+                throw new Error("Unauthorized");
+            }
+
+            localStorage.setItem("authtoken", response.data.access_token_jwt);
+            localStorage.setItem("refreshtoken", response.data.refresh_token_jwt);
+            setUser(response.data.user);
+
+        } catch (error) {
+            console.log(error)
+            // Clear browser and logout
+            //localStorage.clear();
+            //window.location.assign("/login");
         }
 
     }

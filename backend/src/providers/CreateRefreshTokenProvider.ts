@@ -21,7 +21,7 @@ export class CreateRefreshTokenProvider {
         });
 
         if (refresh_token_record_exists > 0) {
-            await prisma.refreshToken.update({
+            await prisma.refreshToken.updateMany({
                 where: {
                     userId: userId
                 },

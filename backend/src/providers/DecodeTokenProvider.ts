@@ -8,11 +8,11 @@ import { verify } from 'jsonwebtoken';
 - Refresh token have more lifetime that access token - 7 days, for example
 */
 
-export class VerifyTokenProvider {
+export class DecodeTokenProvider {
 
     async execute(token: string) {
 
-        const verification = verify(token, process.env.SECRET_JWT, (err, payload) => {
+        const decoded = verify(token, process.env.SECRET_JWT, (err, payload) => {
             if (err) {
                 return false;
             } else {
@@ -20,7 +20,7 @@ export class VerifyTokenProvider {
             }
         });
 
-        return verification;
+        return decoded;
     }
 
 }

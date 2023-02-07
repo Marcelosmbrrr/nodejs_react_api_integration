@@ -2,6 +2,7 @@ import * as React from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import { useSnackbar } from 'notistack';
 import Stack from '@mui/material/Stack';
+import moment from 'moment';
 // Axios
 import { api as axios } from '../../services/api';
 // Context
@@ -13,7 +14,7 @@ import { DeleteUserModal } from '../Modal/DeleteUserModal';
 const columns = [
     { field: 'id', headerName: 'ID', width: 90 },
     {
-        field: 'name',
+        field: 'username',
         headerName: 'Nome',
         flex: 1,
         minWidth: 200,
@@ -47,7 +48,7 @@ const columns = [
         sortable: true,
         editable: false,
         valueGetter: (data) => {
-            return data.row.created_at;
+            return moment(data.row.created_at).format("YYYY/MM/DD");
         }
     },
     {
@@ -95,11 +96,12 @@ export function UsersTable() {
             headers: headers
         })
             .then((response) => {
-                setData([]);
+                setData(response.data.users);
                 enqueueSnackbar("Usuários encontrados.", { variant: "success" });
             })
             .catch((error) => {
                 setData([]);
+                console.log(error)
                 enqueueSnackbar(error.response.data.message, { variant: "error" });
             })
             .finally(() => {

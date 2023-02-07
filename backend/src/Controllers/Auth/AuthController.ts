@@ -4,7 +4,8 @@ import { compare } from 'bcryptjs';
 // Provider
 import { CreateAccessTokenProvider } from "../../providers/CreateAccessTokenProvider";
 import { CreateRefreshTokenProvider } from "../../providers/CreateRefreshTokenProvider";
-import { VerifyTokenProvider } from "../../providers/VerifyTokenProvider";
+import { DecodeTokenProvider } from "../../providers/DecodeTokenProvider";
+import { VerifyTokenExpirationProvider } from "../../providers/VerifyTokenExpiration";
 // JWT verify
 import { JwtPayload, verify } from 'jsonwebtoken';
 
@@ -51,6 +52,7 @@ class AuthController {
                 }
             });
 
+
         } catch (error) {
             if (error.message === 'Email or password incorrect') {
                 res.status(401).send({ message: error.message });
@@ -71,20 +73,35 @@ class AuthController {
                 throw new Error('Unauthorized');
             }
 
-            // Verify token
-            const tokenVerification = new VerifyTokenProvider();
-            const verification: JwtPayload | Boolean = await tokenVerification.execute(access_token);
+            // Decode token
+            const tokenDecodification = new DecodeTokenProvider();
+            const decoded: JwtPayload | Boolean = await tokenDecodification.execute(access_token);
 
-            if (!verification) {
+            if (!decoded) {
                 throw new Error('Token is invalid');
             }
 
-            const userId = verification.sub;
+            // Verify token expiration
+            const tokenVerification = new VerifyTokenExpirationProvider();
+            const verification = await tokenVerification.execute(decoded);
 
+            if (!verification) {
+                throw new Error('Token expired');
+            }
+
+            const userId = decoded.sub;
             const user = await prisma.user.findUnique({
                 where: {
                     id: Number(userId),
                 },
+                select: {
+                    id: true,
+                    username: true,
+                    email: true,
+                    name: true,
+                    roleId: true,
+                    created_at: true
+                }
             });
 
             if (!user) {
@@ -100,7 +117,7 @@ class AuthController {
             });
 
         } catch (error) {
-            if (error.message === 'Unauthorized' || error.message === 'Token is invalid' || error.message === 'User not found') {
+            if (error.message === 'Unauthorized' || error.message === 'Token is invalid' || error.message === 'User not found' || error.message === 'Token expired') {
                 res.status(401).send({ message: error.message });
             } else {
                 res.status(500).send({ message: error.message });
@@ -119,17 +136,24 @@ class AuthController {
                 throw new Error('Unauthorized');
             }
 
-            // Verify token
-            const tokenVerification = new VerifyTokenProvider();
-            const verification: JwtPayload | Boolean = await tokenVerification.execute(refresh_token);
+            // Decode token
+            const tokenDecodification = new DecodeTokenProvider();
+            const decoded: JwtPayload | Boolean = await tokenDecodification.execute(refresh_token);
+
+            if (!decoded) {
+                throw new Error('Token is invalid');
+            }
+
+            const tokenVerification = new VerifyTokenExpirationProvider();
+            const verification = await tokenVerification.execute(decoded);
 
             if (!verification) {
-                throw new Error('Token is invalid');
+                throw new Error('Session expired');
             }
 
             const refresh_token_record = await prisma.refreshToken.findUnique({
                 where: {
-                    id: verification.sub, // token subject (is user id)
+                    id: decoded.sub, // token subject (is user id)
                 },
             })
 
@@ -168,7 +192,7 @@ class AuthController {
             });
 
         } catch (error) {
-            if (error.message === 'Unauthorized' || error.message === 'Token is invalid' || error.message === 'User not found') {
+            if (error.message === 'Unauthorized' || error.message === 'Token is invalid' || error.message === 'User not found' || error.message === 'Session expired') {
                 res.status(401).send({ message: error.message });
             } else {
                 res.status(500).send({ message: error.message });

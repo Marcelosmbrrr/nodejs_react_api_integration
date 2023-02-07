@@ -84,21 +84,6 @@ export function MyProfileModal() {
                                 }}
                             />
                         </Grid>
-                        <Grid item xs={6}>
-                            <TextField
-                                autoFocus
-                                margin="dense"
-                                id="created_at"
-                                label="Created at"
-                                type="text"
-                                fullWidth
-                                variant="outlined"
-                                value={user.created_at}
-                                inputProps={{
-                                    readOnly: true
-                                }}
-                            />
-                        </Grid>
                     </Grid>
                 </DialogContent>
 

@@ -32,7 +32,6 @@ CREATE TABLE `refresh_token` (
     `is_valid` BOOLEAN NOT NULL DEFAULT true,
     `userId` INTEGER NOT NULL,
 
-    UNIQUE INDEX `refresh_token_userId_key`(`userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
