@@ -24,7 +24,8 @@ import { useAuth } from '../../context/Auth';
 // Types
 import { IFormValidation } from '../../types';
 import { IChatMessage } from '../../types';
-import { IfieldError } from '../../types';
+// Socket io
+import { io } from "socket.io-client";
 
 const ChatRow = styled.div`
     display: flex;
@@ -54,6 +55,9 @@ const validation: IFormValidation = {
     }
 }
 
+const socket = io();
+
+
 export function RealTimeChatModal() {
 
     const { user } = useAuth();
@@ -64,8 +68,19 @@ export function RealTimeChatModal() {
     const [messages, setMessages] = React.useState<IChatMessage[]>([]);
     const [connected, setConnected] = React.useState<boolean>(false);
 
-    // Subscribe channel 
-    // Listen channel changes
+    React.useEffect(() => {
+        const socket = io(`${import.meta.env.VITE_BACKEND_URL}/action/message`);
+    }, []);
+
+    if (socket.connected) {
+
+    } else {
+
+        socket.on("connect", () => {
+            console.log(socket.id); // x8WIv7-mJelg7on_ALbx
+        });
+
+    }
 
     const handleOpen = () => {
         setOpen(true);

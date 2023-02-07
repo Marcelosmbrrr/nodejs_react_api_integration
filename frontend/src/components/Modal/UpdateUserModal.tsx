@@ -18,10 +18,14 @@ import { api as axios } from '../../services/api';
 // Context
 import { useRefreshTable } from '../../context/RefreshTable';
 // Types
-import { IFormValidation } from '../../types';
+import { IFormError, IFormValidation } from '../../types';
+import { IFormData } from '../../types';
+import { IAlert } from '../../types';
+// Components
+import { FetchedDataSelection } from '../Select/FetchedDataSelection';
 
-const initialFormData = { name: '', email: '' }
-const initialFormError = { name: { error: false, message: '' }, email: { error: false, message: '' } }
+const initialFormData = { name: '', email: '', role_id: '0' }
+const initialFormError = { name: { error: false, message: '' }, email: { error: false, message: '' }, role_id: { error: false, message: '' } }
 const initialAlert = { display: false, type: "", message: "" }
 
 const formValidation: IFormValidation = {
@@ -32,23 +36,31 @@ const formValidation: IFormValidation = {
     email: {
         test: (value) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value),
         message: 'Email invalid.'
+    },
+    role_id: {
+        test: (value) => value != "0" && value != null,
+        message: "Role must be selected"
     }
 }
 
-export const UpdateUserModal = React.memo((props) => {
+interface IProps {
+    formData: IFormData
+}
+
+export const UpdateUserModal = React.memo((props: IProps) => {
 
     // Contexts
     const { refreshTable } = useRefreshTable();
     // Local states
-    const [open, setOpen] = React.useState(false);
-    const [loading, setLoading] = React.useState(false);
-    const [alert, setAlert] = React.useState(initialAlert);
-    const [formData, setFormData] = React.useState(initialFormData);
-    const [formError, setFormError] = React.useState(initialFormError);
+    const [open, setOpen] = React.useState<boolean>(false);
+    const [loading, setLoading] = React.useState<boolean>(false);
+    const [alert, setAlert] = React.useState<IAlert>(initialAlert);
+    const [formData, setFormData] = React.useState<IFormData>(initialFormData);
+    const [formError, setFormError] = React.useState<IFormError>(initialFormError);
 
     function handleOpen() {
         setOpen(true);
-        setFormData({ name: props.formData.name, email: props.formData.email });
+        setFormData({ name: props.formData.name, email: props.formData.email, role_id: props.formData.role_id });
         setFormError(initialFormError);
         setAlert(initialAlert);
     }
@@ -101,24 +113,20 @@ export const UpdateUserModal = React.memo((props) => {
             }, 2000);
 
         } catch (error) {
-
             setAlert({ display: true, type: "error", message: error.response.data.message });
-
         } finally {
-
             setLoading(false);
-
         }
     }
 
-    function handleChange(e) {
+    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
         setFormData({ ...formData, [e.target.name]: e.currentTarget.value });
     }
 
     return (
         <>
             <Tooltip title="Edit User">
-                <IconButton variant="contained" onClick={handleOpen}>
+                <IconButton onClick={handleOpen}>
                     <EditIcon />
                 </IconButton>
             </Tooltip>
@@ -144,7 +152,7 @@ export const UpdateUserModal = React.memo((props) => {
                                 value={formData.name}
                                 error={formError.name.error}
                                 helperText={formError.name.message}
-                                onChange={(e) => handleChange(e)}
+                                onChange={handleChange}
                             />
                         </Grid>
                         <Grid item xs={12}>
@@ -160,7 +168,17 @@ export const UpdateUserModal = React.memo((props) => {
                                 value={formData.email}
                                 error={formError.email.error}
                                 helperText={formError.email.message}
-                                onChange={(e) => handleChange(e)}
+                                onChange={handleChange}
+                            />
+                        </Grid>
+                        <Grid item xs={6}>
+                            <FetchedDataSelection
+                                handleChange={handleChange}
+                                selection={formData.role_id}
+                                error={formError.role_id.error}
+                                errorMessage={formError.role_id.message}
+                                option={{ key: "id", value: "id", label: "name" }}
+                                fetch_from={`action/load-roles`}
                             />
                         </Grid>
                     </Grid>

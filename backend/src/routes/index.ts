@@ -2,6 +2,8 @@ import { Router } from "express";
 import { body } from "express-validator";
 import UserController from "../Controllers/User/UserController";
 import AuthController from "../Controllers/Auth/AuthController";
+import LoadRolesController from "../Controllers/Action/LoadRolesController";
+import MessageController from "../Controllers/Action/MessageController";
 
 const createUserRequest = [
     body('name').notEmpty().withMessage("Name is required").isLength({ min: 3, max: 255 }),
@@ -30,5 +32,8 @@ router.get('/user/:identifier', UserController.find);
 router.post('/user', createUserRequest, UserController.store);
 router.patch('/user/:identifier', updateUserRequest, UserController.update);
 router.delete('/user/:identifier', UserController.delete);
+// Generic actions
+router.get('/action/load-roles', LoadRolesController.index);
+router.get('/action/message', MessageController.index);
 
 export { router }

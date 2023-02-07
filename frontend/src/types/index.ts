@@ -14,13 +14,13 @@ export interface IFormData {
     [key: string]: string
 }
 
-export interface IfieldError {
+export interface IFieldError {
     error: boolean,
     message: string
 }
 
 export interface IFormError {
-    [key: string]: IfieldError
+    [key: string]: IFieldError
 }
 
 export interface IFormValidation {
@@ -36,6 +36,12 @@ export interface IChatMessage {
         color: string,
     },
     time: string,
+    message: string
+}
+
+export interface IAlert {
+    display: boolean,
+    type: string,
     message: string
 }
 

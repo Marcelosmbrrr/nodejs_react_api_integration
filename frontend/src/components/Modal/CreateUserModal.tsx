@@ -21,9 +21,12 @@ import { useRefreshTable } from '../../context/RefreshTable';
 import { IFormValidation } from '../../types';
 import { IFormData } from '../../types';
 import { IFormError } from '../../types';
+import { IAlert } from '../../types';
+// Components
+import { FetchedDataSelection } from '../Select/FetchedDataSelection';
 
-const initialFormData = { name: '', email: '', password: '' }
-const initialFormError = { name: { error: false, message: '' }, email: { error: false, message: '' }, password: { error: false, message: '' } }
+const initialFormData = { name: '', email: '', password: '', role_id: '0' }
+const initialFormError = { name: { error: false, message: '' }, email: { error: false, message: '' }, password: { error: false, message: '' }, role_id: { error: false, message: '' } }
 const initialAlert = { display: false, type: "", message: "" }
 
 const formValidation: IFormValidation = {
@@ -38,6 +41,10 @@ const formValidation: IFormValidation = {
     password: {
         test: (value) => value != null && value.length > 0,
         message: "Password must be informed and have at least 10 characters."
+    },
+    role_id: {
+        test: (value) => value != "0" && value != null,
+        message: "Role must be selected"
     }
 }
 
@@ -46,9 +53,9 @@ export function CreateUserModal() {
     // Contexts
     const { refreshTable } = useRefreshTable();
     // Local states
-    const [open, setOpen] = React.useState(false);
-    const [loading, setLoading] = React.useState(false);
-    const [alert, setAlert] = React.useState(initialAlert);
+    const [open, setOpen] = React.useState<boolean>(false);
+    const [loading, setLoading] = React.useState<boolean>(false);
+    const [alert, setAlert] = React.useState<IAlert>(initialAlert);
     const [formData, setFormData] = React.useState<IFormData>(initialFormData);
     const [formError, setFormError] = React.useState<IFormError>(initialFormError);
 
@@ -114,7 +121,7 @@ export function CreateUserModal() {
 
     }
 
-    function handleChange(e) {
+    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
         setFormData({ ...formData, [e.target.name]: e.currentTarget.value });
     }
 
@@ -180,6 +187,17 @@ export function CreateUserModal() {
                                 error={formError.password.error}
                                 helperText={formError.password.message}
                                 onChange={handleChange}
+                            />
+                        </Grid>
+
+                        <Grid item xs={6}>
+                            <FetchedDataSelection
+                                handleChange={handleChange}
+                                selection={formData.role_id}
+                                error={formError.role_id.error}
+                                errorMessage={formError.role_id.message}
+                                option={{ key: "id", value: "id", label: "name" }}
+                                fetch_from={`action/load-roles`}
                             />
                         </Grid>
                     </Grid>

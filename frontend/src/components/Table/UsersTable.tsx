@@ -15,7 +15,7 @@ const columns = [
     { field: 'id', headerName: 'ID', width: 90 },
     {
         field: 'username',
-        headerName: 'Nome',
+        headerName: 'Name',
         flex: 1,
         minWidth: 200,
         sortable: true,
@@ -92,6 +92,8 @@ export function UsersTable() {
             'Authorization': `Bearer ${token}`
         }
 
+        setLoading(true);
+
         axios.get(`${import.meta.env.VITE_BACKEND_URL}/user`, {
             headers: headers
         })
@@ -107,6 +109,7 @@ export function UsersTable() {
             .finally(() => {
                 setLoading(false);
             });
+
 
         return () => {
             is_mounted = false;
