@@ -122,7 +122,7 @@ export function CreateUserModal() {
     }
 
     function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-        setFormData({ ...formData, [e.target.name]: e.currentTarget.value });
+        setFormData({ ...formData, [e.target.name]: e.target.value });
     }
 
     return (
