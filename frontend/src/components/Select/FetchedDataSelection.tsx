@@ -16,7 +16,7 @@ interface IProps {
     handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void
 }
 
-export const FetchedDataSelection = React.memo((props: IProps) => {
+export function FetchedDataSelection(props: IProps) {
 
     const [roles, setRoles] = React.useState([]);
     const [selection, setSelection] = React.useState(props.selection);
@@ -41,7 +41,12 @@ export const FetchedDataSelection = React.memo((props: IProps) => {
                 setLoading(false);
             });
 
-    }, [])
+    }, []);
+
+    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+        setSelection(e.target.value);
+        props.handleChange(e);
+    }
 
     if (loading) {
         return <TextField label="Role" variant="outlined" placeholder='Loading...' disabled />
@@ -58,9 +63,12 @@ export const FetchedDataSelection = React.memo((props: IProps) => {
                 select
                 label="Role"
                 value={selection}
-                helperText="Please select your currency"
+                error={props.error}
+                helperText={props.errorMessage}
+                onChange={handleChange}
+                fullWidth
             >
-                <MenuItem key={"0"} value={"0"}>
+                <MenuItem key={"0"} value={"0"} disabled>
                     Choose
                 </MenuItem>
                 {roles.map((option) => (
@@ -71,6 +79,5 @@ export const FetchedDataSelection = React.memo((props: IProps) => {
             </TextField>
         )
     }
-
-});
+}
 

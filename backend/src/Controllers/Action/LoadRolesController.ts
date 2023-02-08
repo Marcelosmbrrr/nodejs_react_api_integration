@@ -7,7 +7,7 @@ class LoadRolesController {
 
         try {
 
-            const roles = prisma.role.findMany({
+            const roles = await prisma.role.findMany({
                 select: {
                     id: true,
                     name: true

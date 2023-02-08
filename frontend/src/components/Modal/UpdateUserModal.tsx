@@ -24,7 +24,6 @@ import { IAlert } from '../../types';
 // Components
 import { FetchedDataSelection } from '../Select/FetchedDataSelection';
 
-const initialFormData = { name: '', email: '', role_id: '0' }
 const initialFormError = { name: { error: false, message: '' }, email: { error: false, message: '' }, role_id: { error: false, message: '' } }
 const initialAlert = { display: false, type: "", message: "" }
 
@@ -55,7 +54,7 @@ export const UpdateUserModal = React.memo((props: IProps) => {
     const [open, setOpen] = React.useState<boolean>(false);
     const [loading, setLoading] = React.useState<boolean>(false);
     const [alert, setAlert] = React.useState<IAlert>(initialAlert);
-    const [formData, setFormData] = React.useState<IFormData>(initialFormData);
+    const [formData, setFormData] = React.useState<IFormData>({});
     const [formError, setFormError] = React.useState<IFormError>(initialFormError);
 
     function handleOpen() {

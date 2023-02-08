@@ -1,7 +1,10 @@
 import * as React from 'react';
+// Mui
 import { DataGrid } from '@mui/x-data-grid';
 import { useSnackbar } from 'notistack';
 import Stack from '@mui/material/Stack';
+import { GridRenderCellParams } from '@mui/x-data-grid';
+// Moment
 import moment from 'moment';
 // Axios
 import { api as axios } from '../../services/api';
@@ -15,7 +18,7 @@ const columns = [
     { field: 'id', headerName: 'ID', width: 90 },
     {
         field: 'username',
-        headerName: 'Name',
+        headerName: 'Username',
         flex: 1,
         minWidth: 200,
         sortable: true,
@@ -36,7 +39,7 @@ const columns = [
         minWidth: 200,
         sortable: true,
         editable: false,
-        valueGetter: (data) => {
+        valueGetter: (data: GridRenderCellParams) => {
             return data.row.role.name;
         }
     },
@@ -47,7 +50,7 @@ const columns = [
         minWidth: 200,
         sortable: true,
         editable: false,
-        valueGetter: (data) => {
+        valueGetter: (data: GridRenderCellParams) => {
             return moment(data.row.created_at).format("YYYY/MM/DD");
         }
     },
@@ -58,11 +61,11 @@ const columns = [
         minWidth: 200,
         sortable: true,
         editable: false,
-        renderCell: (data) => {
+        renderCell: (data: GridRenderCellParams) => {
 
             return (
                 <Stack spacing={1} direction="row">
-                    <UpdateUserModal formData={{ id: data.row.id, name: data.row.name, email: data.row.email }} />
+                    <UpdateUserModal formData={{ id: data.row.id, name: data.row.name, email: data.row.email, role_id: data.row.role.id }} />
                     <DeleteUserModal formData={{ id: data.row.id }} />
                 </Stack>
             )
