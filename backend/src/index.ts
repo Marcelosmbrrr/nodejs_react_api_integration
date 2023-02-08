@@ -58,7 +58,7 @@ http.listen(process.env.APP_PORT, () => {
 
 const SocketIoServer = new Server(http, {
     cors: {
-        origin: process.env.FRONTEND_URL
+        origin: "*"
     }
 });
 export { SocketIoServer };

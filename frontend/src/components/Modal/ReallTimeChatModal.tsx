@@ -1,4 +1,5 @@
 import * as React from 'react';
+// Mui
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -70,7 +71,7 @@ export function RealTimeChatModal() {
 
     socket.on("successful-authentication", (response) => {
         setConnected(true);
-        socket.username = user.username;
+        socket.username = response.username; // or just user.username
         setMessages([
             { username: socket.username, time: moment().format("LT"), message: 'You are online now!', verification: true }
         ]);

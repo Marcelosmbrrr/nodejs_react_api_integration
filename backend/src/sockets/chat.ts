@@ -7,11 +7,13 @@ SocketIoServer.on('connection', (socket) => {
 
     socket.on("authenticate", (username) => {
 
+        console.log('auth')
+
         // Create socket server side attribute username
         socket.username = username;
 
         // Create response data and send with emission
-        const response = {};
+        const response = { username };
         socket.emit("successful-authentication", response);
 
     });
