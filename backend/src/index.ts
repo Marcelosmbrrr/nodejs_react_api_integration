@@ -5,13 +5,15 @@
  * dotenv: Zero-dependency module that loads environment variables from a .env file into process.env
  * cors: Express middleware to enable CORS with various options.
  * helmet: Express middleware to secure your apps by setting various HTTP headers, which mitigate common attack vectors.
- * 
+ * Server: socket io server for websockets
  */
 
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import * as dotenv from "dotenv";
+import { createServer } from "http";
+import { Server } from "socket.io";
 
 dotenv.config();
 
@@ -26,6 +28,7 @@ if (!process.env.APP_PORT) {
 }
 
 const app = express();
+const http = createServer(app);
 
 /**
  *  App Configuration
@@ -45,6 +48,17 @@ app.use('/api', router);
  * Server Activation
  */
 
-app.listen(process.env.APP_PORT, () => {
+http.listen(process.env.APP_PORT, () => {
     console.log(`Listening on port ${process.env.APP_PORT}`);
 });
+
+/*
+* Sockets server initialization
+*/
+
+const SocketIoServer = new Server(http, {
+    cors: {
+        origin: process.env.FRONTEND_URL
+    }
+});
+export { SocketIoServer };

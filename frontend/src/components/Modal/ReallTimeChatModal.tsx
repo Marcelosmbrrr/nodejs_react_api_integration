@@ -15,11 +15,11 @@ import TextField from '@mui/material/TextField';
 import SendIcon from '@mui/icons-material/Send';
 import InputAdornment from '@mui/material/InputAdornment';
 import CloseIcon from '@mui/icons-material/Close';
+import ErrorIcon from '@mui/icons-material/Error';
 import { DialogTitle, Divider, Typography } from '@mui/material';
 // Other
 import styled from 'styled-components';
 import moment from 'moment';
-import { api as axios } from '../../services/api';
 import { useAuth } from '../../context/Auth';
 // Types
 import { IFormValidation } from '../../types';
@@ -55,8 +55,8 @@ const validation: IFormValidation = {
     }
 }
 
-const socket = io();
-
+// Create a socket server to use socket io functionalities
+const socket = io(import.meta.env.VITE_BACKEND_URL);
 
 export function RealTimeChatModal() {
 
@@ -64,35 +64,35 @@ export function RealTimeChatModal() {
 
     const [open, setOpen] = React.useState<boolean>(false);
     const [message, setMessage] = React.useState<string>("");
-    const [messageError, setMessageError] = React.useState<IfieldError>({ error: false, message: '' });
+    const [messageError, setMessageError] = React.useState({ error: false, message: '' });
     const [messages, setMessages] = React.useState<IChatMessage[]>([]);
     const [connected, setConnected] = React.useState<boolean>(false);
 
-    React.useEffect(() => {
-        const socket = io(`${import.meta.env.VITE_BACKEND_URL}/action/message`);
-    }, []);
+    socket.on("successful-authentication", (response) => {
+        setConnected(true);
+        socket.username = user.username;
+        setMessages([
+            { username: socket.username, time: moment().format("LT"), message: 'You are online now!', verification: true }
+        ]);
+    });
 
-    if (socket.connected) {
+    socket.on("new-message-verified", (response) => {
 
-    } else {
-
-        socket.on("connect", () => {
-            console.log(socket.id); // x8WIv7-mJelg7on_ALbx
+        setMessages((previously) => {
+            previously.push(response);
+            return previously;
         });
-
-    }
+    });
 
     const handleOpen = () => {
         setOpen(true);
 
-        if (connected) return '';
+        if (socket.connected) return;
 
-        setTimeout(() => {
-            setConnected(true);
-            setMessages([
-                { username: 'You', avatar: { color: 'success' }, time: moment().format("LT"), message: 'You are online now!' }
-            ]);
-        }, 2000);
+        socket.on("connect", () => {
+            // Send username in first connection - to create "username" attribute in client and server side
+            socket.emit("authenticate", user.username);
+        });
     };
 
     const handleClose = () => {
@@ -108,24 +108,14 @@ export function RealTimeChatModal() {
 
         if (is_invalid) return '';
 
-        requestServer();
+        sendMessageToServer();
 
     }
 
-    async function requestServer() {
+    async function sendMessageToServer() {
 
-        const formData = new FormData();
-        formData.append('message', message);
-
-        try {
-
-            const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/message`, formData);
-            setMessage('');
-
-        } catch (error) {
-            console.log(error)
-            setMessageError({ error: true, message: error.message });
-        }
+        socket.emit("new-message", message);
+        setMessage('');
 
     }
 
@@ -144,7 +134,8 @@ export function RealTimeChatModal() {
                             <ChatRow key={index}>
                                 <Box sx={{ display: 'flex' }}>
                                     <ChatRowAvatar>
-                                        <PersonIcon color={message.avatar.color} />
+                                        {message.verification && <PersonIcon color={message.username === user.username ? "success" : "inherit"} />}
+                                        {!message.verification && <ErrorIcon color="error" />}
                                     </ChatRowAvatar>
                                     <ChatRowPersonName>
                                         {message.username}

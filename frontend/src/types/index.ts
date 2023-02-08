@@ -31,10 +31,8 @@ export interface IFormValidation {
 }
 
 export interface IChatMessage {
+    verification: boolean,
     username: string,
-    avatar: {
-        color: string,
-    },
     time: string,
     message: string
 }
